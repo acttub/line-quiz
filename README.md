@@ -66,7 +66,7 @@ uv run --with "fonttools[woff]" python build-fonts.py
 ⚠️ 하네스가 검증하는 건 레이아웃·CSS 계산이다. 노치·키보드 가림·웹폰트 실패·색감은
 **실제 아이폰 사파리와 인스타 인앱에서 한 번** 봐야 한다. 게시 전 수동 확인은 대체되지 않는다.
 
-`git push origin main`이 곧 Vercel 배포다. 푸시는 최우영 승인 후에 한다.
+`git push origin main`이 곧 Vercel 배포다. 푸시는 소유자 승인 후에 한다.
 
 ## 아직 안 된 것
 
