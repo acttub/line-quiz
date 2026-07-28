@@ -17,8 +17,9 @@ const screens = {
 };
 
 /* ── 문구 주입 ────────────────────────────────────────────────
-   data-copy="a.b"는 텍스트로, data-copy-html은 <br> 같은 태그를 살려서 넣는다.
-   html 쪽은 copy.js에 우리가 쓴 문장만 들어가므로 외부 입력이 섞이지 않는다. */
+   data-copy="a.b" 자리에 copy.js의 문장을 텍스트로 넣는다.
+   태그를 살려 넣는 경로(innerHTML)는 두지 않는다 — 줄바꿈은 마크업에서 처리하고,
+   문자열을 HTML로 해석하는 자리를 아예 만들지 않는 편이 안전하다. */
 function get(path) {
   return path.split('.').reduce((acc, key) => (acc == null ? acc : acc[key]), COPY);
 }
@@ -27,10 +28,6 @@ function applyCopy(root = document) {
   root.querySelectorAll('[data-copy]').forEach((el) => {
     const value = get(el.dataset.copy);
     if (typeof value === 'string') el.textContent = value;
-  });
-  root.querySelectorAll('[data-copy-html]').forEach((el) => {
-    const value = get(el.dataset.copyHtml);
-    if (typeof value === 'string') el.innerHTML = value;
   });
 }
 
@@ -141,9 +138,15 @@ function answer(picked) {
   $('#choices').querySelectorAll('button').forEach((btn) => {
     btn.disabled = true;
     const label = btn.querySelector('.choice-label').textContent;
-    if (label === q.work) btn.classList.add('choice-correct');
-    else if (label === picked) btn.classList.add('choice-wrong');
-    else btn.classList.add('choice-muted');
+    if (label === q.work) {
+      btn.classList.add('choice-correct');
+      btn.setAttribute('aria-label', COPY.quiz.markCorrect(label));
+    } else if (label === picked) {
+      btn.classList.add('choice-wrong');
+      btn.setAttribute('aria-label', COPY.quiz.markPicked(label));
+    } else {
+      btn.classList.add('choice-muted');
+    }
   });
 
   // 채우기 전에 먼저 연다. aria-live 영역은 "이미 살아 있는 동안 내용이 바뀔 때" 읽히므로,
@@ -193,6 +196,9 @@ function renderResult() {
   $('#result-total').textContent = COPY.result.total(round.length);
   $('#result-score').textContent = String(s);
   $('#result-label').textContent = band.label;
+  // 포커스는 이름표로 가는데, 점수는 그 앞의 다른 요소라 낭독에서 빠진다.
+  // 이름표에 점수까지 담은 이름을 붙여서 결과가 한 번에 들리게 한다.
+  $('#result-label').setAttribute('aria-label', `${COPY.result.heading(s, round.length)}, ${band.label}`);
   $('#result-line').textContent = band.line;
 
   const missed = answers.filter((a) => !a.correct);

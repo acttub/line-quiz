@@ -36,6 +36,10 @@ export const COPY = {
     askLabel: '이 대사를 연기한다면',
     next: '다음 문제',
     last: '결과 보기',
+    // 정답·오답은 화면에서 색과 체크로 구분되는데, 그건 눈으로 보는 사람에게만 전달된다.
+    // 보조기기에는 버튼 이름에 붙여서 알린다.
+    markCorrect: (work) => `${work}, 정답`,
+    markPicked: (work) => `${work}, 내가 고른 답, 오답`,
   },
 
   result: {

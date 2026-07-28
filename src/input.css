@@ -10,6 +10,15 @@
 @import "./brand/tailwind-starter.css";
 @import "./brand/responsive-base.css";
 
+/* ⚠️ 정본(DESIGN.md)에는 카드 그림자가 "0 2px 8px rgba(0,0,0,0.08)"로 정해져 있는데
+   생성기가 그 값을 tailwind-starter.css에 실어주지 않는다. 그래서 .card의
+   box-shadow: var(--shadow-card)가 값 없이 무효가 된다 — 그림자가 조용히 사라진다.
+   pick·link-hub도 같은 이유로 이 줄을 손으로 넣어 두었다. 지어낸 값이 아니라 정본의 값이다.
+   생성기가 고쳐지면 이 블록을 지운다. */
+@theme {
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.08);
+}
+
 /* ── Pretendard ───────────────────────────────────────────────────────
    index.html·copy.js·data.js에 실제로 쓰인 글자만 서브셋한다.
    문구나 대사를 고치면 build-fonts.py를 다시 돌린다 — 안 돌리면 새 글자가 시스템 폰트로 렌더된다.
@@ -76,18 +85,21 @@
   background-image: linear-gradient(160deg, var(--color-gradient-start), var(--color-gradient-end));
 }
 
-@utility shadow-lift {
-  box-shadow: 0 8px 24px rgb(10 42 87 / 0.09);
-}
-
-/* ⚠️ 브랜드 타입 스케일에 없는 크기다. 정본의 가장 큰 글자가 h1(30px)이라
-   결과 화면의 점수 숫자를 세울 자리가 없어서 여기서만 하나 만들었다.
-   다른 곳에 쓰지 않는다. 이 크기가 계속 필요해지면 그때 정본에 올린다. */
-@utility text-score {
-  font-size: 4rem;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+/* 태블릿·데스크톱에서는 셸이 폭을 묶으므로(560·760) 되민다고 화면 끝까지 가지 않는다.
+   가운데 띠처럼 보일 뿐이라, 넓은 화면에서는 되미는 대신 모서리를 둥글려 히어로 카드로 읽히게 한다.
+   Tailwind 변형이 아니라 여기서 처리하는 이유는 bleed가 만든 음수 여백을 되돌려야 하기 때문이다. */
+@media (min-width: 600px) {
+  .bleed {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+  }
+  .bleed-top {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-xl);
+  }
 }
 
 @layer components {
@@ -129,7 +141,7 @@
      나머지는 흐리게 물려서 시선이 두 칸에만 남게 한다. */
   .choice-correct { box-shadow: inset 0 0 0 2px var(--color-success); @apply bg-surface; }
   .choice-correct .choice-label { @apply font-bold text-success; }
-  .choice-correct .choice-num { @apply text-success; background-color: rgb(3 178 108 / 0.12); }
+  .choice-correct .choice-num { @apply text-success; }
   .choice-correct .choice-check { @apply block; }
 
   .choice-wrong { box-shadow: inset 0 0 0 1.5px var(--color-line); @apply bg-surface; }
