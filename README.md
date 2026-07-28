@@ -26,6 +26,8 @@
 | `src/input.css` | Tailwind v4 입력. `styles.css`를 굽는 원본 |
 | `src/brand/` | 볼트 `brand/`에서 온 생성물. **직접 고치지 않는다** |
 | `styles.css` · `fonts/` | 빌드 산출물. 커밋해서 그대로 배포한다 |
+| `og.jpg` | 카카오톡·SNS 공유 카드(1200×630). 배포된다 |
+| `design/` | 공유 카드 원본과 렌더 스크립트. **배포되지 않는다**(`.vercelignore`) |
 
 ## 저작권
 
@@ -69,5 +71,5 @@ uv run --with "fonttools[woff]" python build-fonts.py
 ## 아직 안 된 것
 
 - 도메인 연결(`stage.acttub.com`)과 Vercel 프로젝트 생성
-- OG 이미지 — 없어서 `twitter:card`를 작은 카드로 두었다. 공유 카드가 밋밋하다
+  ⚠️ `og:image`가 절대 주소라 **도메인이 이 주소가 아니면 공유 카드가 안 뜬다.** 같이 고친다.
 - 인스타 유입 캠페인
