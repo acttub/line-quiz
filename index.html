@@ -32,27 +32,37 @@
 </head>
 <body class="bg-neutral text-ink font-sans antialiased">
 
-<!-- 문장은 전부 copy.js에서 주입한다. 이 파일에는 화면 골격만 둔다. -->
+<!-- 문장은 전부 copy.js에서 주입한다. 이 파일에는 화면 골격만 둔다.
+     디자인 시안은 design/화면-2026-07-28.pen — 캔버스는 시안까지고, 이 마크업이 구현 기준이다. -->
 <div class="tier-root">
 <main class="tier-shell pb-xl">
 
   <!-- ── 시작 ───────────────────────────────────────────────── -->
   <section id="screen-start" hidden>
-    <div class="rise mt-lg rounded-lg px-lg py-xl text-center text-white"
-         style="background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));">
+    <!-- 헤더는 화면 폭을 꽉 채운다. tier-shell의 좌우 여백만큼 되밀어야 가장자리까지 색이 간다. -->
+    <div class="bleed bleed-top rise bg-brand pb-xxl text-white">
       <div class="text-body-md font-bold opacity-90" data-copy="start.brand"></div>
-      <h1 class="mt-md text-h1" data-copy="start.title"></h1>
-      <p class="mt-[12px] text-body-md opacity-[0.92]" data-copy-html="start.lead"></p>
+      <h1 class="mt-md text-h1" data-copy="start.titleLine1"></h1>
+      <h1 class="text-h1" data-copy="start.titleLine2"></h1>
+      <p class="mt-[14px] text-body-lg opacity-85 break-keep" data-copy="start.lead"></p>
     </div>
 
-    <p class="mt-md text-center text-body-sm text-ink-tertiary break-keep" data-copy="start.note"></p>
+    <!-- 미리보기 카드가 헤더를 파고든다. 설명 대신 실제 문제 한 장을 보여주는 자리다. -->
+    <div class="card -mt-xl px-lg py-lg shadow-lift">
+      <div class="text-label text-primary" data-copy="start.previewLabel"></div>
+      <blockquote class="mt-md text-h2 break-keep" data-copy="start.previewLine"></blockquote>
+      <div id="preview-choices" class="mt-md grid grid-cols-2 gap-sm opacity-55" aria-hidden="true"></div>
+    </div>
 
-    <button id="btn-start" class="btn btn-primary mt-lg" data-copy="start.button"></button>
+    <div class="mt-xl">
+      <button id="btn-start" class="btn btn-primary" data-copy="start.button"></button>
+      <p class="mt-md text-center text-body-sm text-ink-tertiary break-keep" data-copy="start.note"></p>
+    </div>
   </section>
 
   <!-- ── 문제 ───────────────────────────────────────────────── -->
   <section id="screen-quiz" hidden>
-    <div class="mt-lg flex items-center gap-md">
+    <div class="mt-xl flex items-center gap-md">
       <!-- 몇 번째 문제인지는 옆의 "1 / 10" 텍스트가 읽어준다. 막대는 같은 정보의 그림이라 숨긴다. -->
       <div class="h-[6px] flex-1 overflow-hidden rounded-pill bg-line" aria-hidden="true">
         <div id="progress-bar" class="h-full rounded-pill bg-primary transition-[width] duration-200 ease-out" style="width: 0%"></div>
@@ -61,20 +71,20 @@
     </div>
 
     <!-- 대사. 이 화면의 주인공이라 가장 크게 둔다. -->
-    <div class="card mt-md px-lg py-xl">
+    <div class="card mt-lg px-lg pt-lg pb-[30px] shadow-lift">
       <div class="text-label text-primary" data-copy="quiz.prompt"></div>
       <!-- tabindex="-1"은 다음 문제로 넘어갈 때 포커스를 여기로 옮기기 위한 것이다.
            안 하면 눌렀던 '다음 문제' 버튼이 숨겨지면서 포커스가 문서 맨 위로 떨어진다. -->
       <blockquote id="quiz-line" class="mt-md text-h2 break-keep" tabindex="-1"></blockquote>
     </div>
 
-    <div id="choices" class="mt-md grid gap-sm" role="group" aria-label="작품 고르기"></div>
+    <div id="choices" class="mt-lg grid gap-[10px]" role="group" aria-label="작품 고르기"></div>
 
     <!-- 답을 고른 뒤에만 열린다. 화자·장면·질문이 여기서 함께 나온다.
          aria-live로 묶어야 화면을 못 보는 사람도 정답 여부를 바로 듣는다 —
          포커스만 '다음 문제' 버튼으로 옮기면 맞았는지 틀렸는지가 통째로 빠진다. -->
-    <div id="feedback" class="mt-md" hidden aria-live="polite" tabindex="-1">
-      <div id="verdict-card" class="card px-lg py-md">
+    <div id="feedback" class="mt-lg grid gap-[10px]" hidden aria-live="polite" tabindex="-1">
+      <div class="card px-lg py-md">
         <div id="verdict" class="text-subtitle font-bold"></div>
         <div class="mt-sm text-body-md">
           <span class="text-ink-tertiary" data-copy="quiz.answerLabel"></span>
@@ -83,47 +93,51 @@
         </div>
       </div>
 
-      <div class="card mt-sm px-lg py-md">
+      <div class="card px-lg py-md">
         <div class="text-label text-ink-tertiary" data-copy="quiz.contextLabel"></div>
         <p id="answer-context" class="mt-xs text-body-md text-ink-sub break-keep"></p>
       </div>
 
-      <div class="card mt-sm border-l-4 border-primary px-lg py-md">
-        <div class="text-label text-primary" data-copy="quiz.askLabel"></div>
-        <p id="answer-ask" class="mt-xs text-body-lg break-keep"></p>
+      <!-- 이 카드가 이 서비스의 정체다. 답을 주지 않는 질문이라 시각적으로도 가장 세게 둔다. -->
+      <div class="ask-card px-lg py-lg">
+        <div class="text-label text-primary-strong" data-copy="quiz.askLabel"></div>
+        <p id="answer-ask" class="mt-sm text-body-lg font-semibold text-primary-deep break-keep"></p>
       </div>
 
-      <button id="btn-next" class="btn btn-primary mt-md"></button>
+      <button id="btn-next" class="btn btn-primary mt-sm"></button>
     </div>
   </section>
 
   <!-- ── 결과 ───────────────────────────────────────────────── -->
   <section id="screen-result" hidden>
-    <div class="rise mt-lg rounded-lg px-lg py-xl text-center text-white"
-         style="background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));">
-      <div id="result-heading" class="text-body-md font-bold opacity-90"></div>
+    <div class="bleed bleed-top rise bg-brand pb-xl text-white">
+      <div id="result-total" class="text-body-md font-bold opacity-80"></div>
+      <div class="mt-xs flex items-end gap-xs">
+        <span id="result-score" class="text-score"></span>
+        <span class="pb-[12px] text-h2 opacity-85" data-copy="result.unit"></span>
+      </div>
       <!-- 결과로 넘어올 때 포커스를 여기로 옮긴다. 안 옮기면 마지막에 누른 버튼이 사라지면서
            포커스가 문서 맨 위로 떨어지고, 화면을 못 보는 사람에게 결과가 안내되지 않는다. -->
       <h1 id="result-label" class="mt-sm text-h1 break-keep" tabindex="-1"></h1>
-      <p id="result-line" class="mt-[12px] text-body-md opacity-[0.92] break-keep"></p>
+      <p id="result-line" class="mt-sm text-body-lg opacity-85 break-keep"></p>
     </div>
 
-    <section class="card mt-md px-lg py-lg">
+    <section class="card mt-lg px-lg pt-lg pb-lg">
       <h2 class="text-subtitle font-bold" data-copy="result.missedTitle"></h2>
       <ul id="missed-list" class="mt-md grid gap-md"></ul>
     </section>
 
-    <button id="btn-share" class="btn btn-secondary mt-md" data-copy="result.shareButton"></button>
+    <button id="btn-share" class="btn btn-secondary mt-[12px]" data-copy="result.shareButton"></button>
 
     <!-- 코어로 잇는 다리. 서브프로젝트가 코어가 아님을 여기서 밝힌다. -->
-    <section class="card mt-md px-lg py-lg">
+    <section class="card mt-[12px] px-lg py-lg">
       <h2 class="text-subtitle font-bold break-keep" data-copy="result.bridgeTitle"></h2>
       <p class="mt-sm text-body-md text-ink-sub break-keep" data-copy="result.bridgeBody"></p>
       <a id="btn-core" class="btn btn-outline mt-md" href="https://acttub.com/?utm_source=stage&utm_medium=subproject&utm_campaign=line-quiz"
          data-copy="result.bridgeButton"></a>
     </section>
 
-    <button id="btn-replay" class="btn btn-secondary mt-sm" data-copy="start.replay"></button>
+    <button id="btn-replay" class="btn btn-quiet mt-[12px]" data-copy="start.replay"></button>
   </section>
 
   <footer class="mt-xl text-center text-body-sm text-ink-tertiary">

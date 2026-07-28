@@ -5,6 +5,11 @@ import { COPY, bandFor } from './copy.js';
 import { buildRound } from './data.js';
 
 const $ = (sel) => document.querySelector(sel);
+
+/* 대사를 따옴표로 감싼다. 닫는 따옴표 앞에 word joiner(U+2060)를 넣는 이유는,
+   break-keep이 한국어 단어는 붙여줘도 문장부호까지는 못 붙잡아서
+   마지막 글자와 ”가 갈라져 따옴표만 다음 줄에 혼자 남는 일이 생기기 때문이다. */
+const quote = (line) => `“${line}⁠”`;
 const screens = {
   start: $('#screen-start'),
   quiz: $('#screen-quiz'),
@@ -40,6 +45,54 @@ function show(name) {
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
+/* 보기 한 칸. 번호 원 + 작품명 + (정답일 때만 보이는) 체크로 이뤄진다.
+   체크를 두는 이유는 장식이 아니라, 초록색만으로 정답을 알리면
+   색을 구분하지 못하는 사람에게는 아무 표시도 없는 화면이 되기 때문이다. */
+function choiceButton(label, order) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'choice';
+
+  const num = document.createElement('span');
+  num.className = 'choice-num';
+  num.setAttribute('aria-hidden', 'true');
+  num.textContent = String(order);
+
+  const text = document.createElement('span');
+  text.className = 'choice-label';
+  text.textContent = label;
+
+  const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  check.setAttribute('class', 'choice-check');
+  check.setAttribute('viewBox', '0 0 24 24');
+  check.setAttribute('fill', 'none');
+  check.setAttribute('stroke', 'currentColor');
+  check.setAttribute('stroke-width', '2.5');
+  check.setAttribute('stroke-linecap', 'round');
+  check.setAttribute('stroke-linejoin', 'round');
+  check.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M20 6 9 17l-5-5');
+  check.append(path);
+
+  btn.append(num, text, check);
+  return btn;
+}
+
+/* 시작 화면의 미리보기. 실제로 눌리는 물건이 아니라 "이런 문제가 나온다"는 그림이라
+   버튼이 아닌 칸으로 만들고 스크린리더에서도 빼둔다(마크업에서 aria-hidden). */
+function renderPreview() {
+  const box = $('#preview-choices');
+  if (!box) return;
+  box.replaceChildren();
+  COPY.start.previewChoices.forEach((label) => {
+    const cell = document.createElement('div');
+    cell.className = 'rounded-md bg-neutral px-md py-[12px] text-body-md text-ink-sub';
+    cell.textContent = label;
+    box.append(cell);
+  });
+}
+
 /* ── 한 판의 상태 ────────────────────────────────────────────── */
 let round = [];
 let index = 0;
@@ -59,15 +112,12 @@ function renderQuestion() {
   $('#progress-text').textContent = COPY.quiz.progress(index + 1, round.length);
   $('#progress-bar').style.width = `${(index / round.length) * 100}%`;
 
-  $('#quiz-line').textContent = `“${q.line}”`;
+  $('#quiz-line').textContent = quote(q.line);
 
   const box = $('#choices');
   box.replaceChildren();
-  q.choices.forEach((choice) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'choice';
-    btn.textContent = choice;
+  q.choices.forEach((choice, i) => {
+    const btn = choiceButton(choice, i + 1);
     btn.addEventListener('click', () => answer(choice), { once: true });
     box.append(btn);
   });
@@ -86,10 +136,13 @@ function answer(picked) {
   answers.push({ question: q, picked, correct });
 
   // 고른 뒤에는 보기를 잠근다. 정답은 항상 표시하고, 틀린 경우 고른 것도 같이 표시한다.
+  // 버튼 안에 번호 원까지 들어 있으므로 작품명은 라벨 칸에서 읽는다 —
+  // 버튼 전체의 textContent를 쓰면 "1맥베스"가 되어 어떤 것도 정답과 같지 않게 된다.
   $('#choices').querySelectorAll('button').forEach((btn) => {
     btn.disabled = true;
-    if (btn.textContent === q.work) btn.classList.add('choice-correct');
-    else if (btn.textContent === picked) btn.classList.add('choice-wrong');
+    const label = btn.querySelector('.choice-label').textContent;
+    if (label === q.work) btn.classList.add('choice-correct');
+    else if (label === picked) btn.classList.add('choice-wrong');
     else btn.classList.add('choice-muted');
   });
 
@@ -137,7 +190,8 @@ function renderResult() {
   const s = score();
   const band = bandFor(s);
 
-  $('#result-heading').textContent = COPY.result.heading(s, round.length);
+  $('#result-total').textContent = COPY.result.total(round.length);
+  $('#result-score').textContent = String(s);
   $('#result-label').textContent = band.label;
   $('#result-line').textContent = band.line;
 
@@ -156,7 +210,7 @@ function renderResult() {
       li.className = 'border-l-2 border-line pl-md';
       const line = document.createElement('div');
       line.className = 'text-body-md break-keep';
-      line.textContent = `“${q.line}”`;
+      line.textContent = quote(q.line);
       const meta = document.createElement('div');
       meta.className = 'mt-xs text-body-sm font-semibold text-primary';
       meta.textContent = `${q.work} · ${q.author}`;
@@ -203,6 +257,7 @@ async function share() {
 
 /* ── 시작 ────────────────────────────────────────────────────── */
 applyCopy();
+renderPreview();
 
 $('#btn-start').addEventListener('click', startRound);
 $('#btn-next').addEventListener('click', next);

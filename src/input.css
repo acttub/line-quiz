@@ -52,6 +52,44 @@
   @media (prefers-reduced-motion: reduce) { transition: none; }
 }
 
+/* 화면 폭을 꽉 채우는 블록. tier-shell이 준 좌우 여백만큼 되밀어야 가장자리까지 색이 간다.
+   여백 값을 상수로 베끼지 않고 shell이 쓰는 식을 그대로 뒤집는다 — 티어마다 gutter가 다르고,
+   가로로 눕힌 노치폰에서는 safe-left/right까지 더해지기 때문이다. 상수로 적으면 그 기기에서만 틈이 생긴다.
+   되민 만큼 다시 안쪽 여백으로 넣어 글자는 노치를 피하고, 아래 카드들과 같은 선에 선다. */
+@utility bleed {
+  margin-left: calc((var(--gutter) + var(--safe-left)) * -1);
+  margin-right: calc((var(--gutter) + var(--safe-right)) * -1);
+  padding-left: calc(var(--gutter) + var(--safe-left));
+  padding-right: calc(var(--gutter) + var(--safe-right));
+}
+
+/* 화면 맨 위까지 색을 올린다. tier-root가 노치만큼 위를 비워두기 때문에,
+   그대로 두면 파란 헤더 위에 배경색 띠가 한 줄 생긴다(에뮬레이터에서는 safe-top이 0이라 안 보인다).
+   위로 당긴 만큼 안쪽 여백으로 돌려주므로 글자는 여전히 노치 아래에서 시작한다. */
+@utility bleed-top {
+  margin-top: calc(var(--safe-top) * -1);
+  padding-top: calc(var(--safe-top) + var(--spacing-xxl));
+}
+
+/* 브랜드 그라데이션. 이 방향(160°)이 로고와 같은 결이라 화면마다 다시 정하지 않는다. */
+@utility bg-brand {
+  background-image: linear-gradient(160deg, var(--color-gradient-start), var(--color-gradient-end));
+}
+
+@utility shadow-lift {
+  box-shadow: 0 8px 24px rgb(10 42 87 / 0.09);
+}
+
+/* ⚠️ 브랜드 타입 스케일에 없는 크기다. 정본의 가장 큰 글자가 h1(30px)이라
+   결과 화면의 점수 숫자를 세울 자리가 없어서 여기서만 하나 만들었다.
+   다른 곳에 쓰지 않는다. 이 크기가 계속 필요해지면 그때 정본에 올린다. */
+@utility text-score {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
 @layer components {
   .btn {
     @apply tappable block w-full rounded-md border-0 py-[14px] px-md text-subtitle font-sans cursor-pointer text-center;
@@ -67,20 +105,44 @@
   .btn-secondary { @apply bg-primary-soft text-primary-strong; }
   .btn-secondary:hover { @apply bg-primary-soft-hover; }
 
+  /* 조용한 버튼. 결과 화면의 '다시 한 판'처럼 있어도 되고 없어도 되는 행동 자리. */
+  .btn-quiet { @apply bg-surface-sub text-ink-sub; }
+  .btn-quiet:hover { @apply bg-line; }
+
   /* 보기 버튼. 답을 고르기 전에는 전부 같은 무게로 보여야 한다 —
-     한 칸이라도 다르게 생기면 그게 힌트가 된다. */
+     한 칸이라도 다르게 생기면 그게 힌트가 된다.
+     번호 원을 왼쪽에 두는 건 장식이 아니라, 네 칸이 같은 리듬으로 읽히게 하는 기준선이다. */
   .choice {
-    @apply tappable card w-full cursor-pointer border-0 px-lg py-md text-left text-body-lg font-sans text-ink;
-    min-height: 52px;
+    @apply tappable card flex w-full cursor-pointer items-center gap-[14px] border-0 px-[18px] py-[15px] text-left font-sans;
   }
   .choice:hover:not(:disabled) { @apply bg-primary-soft; }
-
-  /* 답을 고른 뒤. 정답은 늘 초록으로 드러내고, 틀리게 고른 것만 따로 표시한다.
-     나머지는 흐리게 물려서 시선이 두 칸에만 남게 한다. */
   .choice:disabled { cursor: default; }
-  .choice-correct { box-shadow: inset 0 0 0 2px var(--color-success); @apply bg-surface font-bold text-success; }
-  .choice-wrong { box-shadow: inset 0 0 0 2px var(--color-line); @apply bg-surface text-ink-tertiary line-through; }
-  .choice-muted { @apply bg-surface-sub text-ink-tertiary opacity-70; box-shadow: none; }
+
+  .choice-num {
+    @apply grid h-[28px] w-[28px] shrink-0 place-items-center rounded-pill bg-neutral text-body-sm font-bold text-ink-tertiary;
+  }
+  .choice-label { @apply flex-1 text-body-lg font-semibold text-ink; }
+  /* 정답에만 붙는 체크. 색만으로 정답을 알리면 색을 구분 못 하는 사람에게는 아무 표시가 없다. */
+  .choice-check { @apply hidden h-[20px] w-[20px] shrink-0 text-success; }
+
+  /* 답을 고른 뒤. 정답은 늘 드러내고, 틀리게 고른 것만 따로 표시한다.
+     나머지는 흐리게 물려서 시선이 두 칸에만 남게 한다. */
+  .choice-correct { box-shadow: inset 0 0 0 2px var(--color-success); @apply bg-surface; }
+  .choice-correct .choice-label { @apply font-bold text-success; }
+  .choice-correct .choice-num { @apply text-success; background-color: rgb(3 178 108 / 0.12); }
+  .choice-correct .choice-check { @apply block; }
+
+  .choice-wrong { box-shadow: inset 0 0 0 1.5px var(--color-line); @apply bg-surface; }
+  .choice-wrong .choice-label { @apply font-medium text-ink-tertiary line-through; }
+
+  .choice-muted { @apply bg-surface-sub opacity-70; box-shadow: none; }
+  .choice-muted .choice-label { @apply font-medium text-ink-tertiary; }
+
+  /* 연기 질문 카드. 파란 왼쪽 선 한 겹으로 다른 카드와 격을 나눈다. */
+  .ask-card {
+    @apply rounded-lg bg-primary-soft;
+    border-left: 4px solid var(--color-primary);
+  }
 }
 
 /* ── 진입 모션 ────────────────────────────────────────────────────────
