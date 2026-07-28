@@ -261,6 +261,36 @@ async function share() {
   }
 }
 
+/* 코어(acttub.com)로 나가는 클릭을 구글 시트에 남긴다.
+   acttub.com은 소스 저장소가 특정되지 않아 우리가 계측을 못 붙인다. 여기서 세지 않으면
+   "이 퀴즈를 풀고 코어로 넘어간 사람"이 어디에도 안 남는다. 시트는 link.acttub.com/go 가
+   쓰는 것과 같은 곳이라 채널이 한 표에 모인다.
+   리다이렉트를 끼우지 않는 이유: 중간에 페이지를 한 장 태우면 그만큼 사람이 샌다. */
+const CORE_TRACK = 'https://script.google.com/macros/s/AKfycbxmvQWyu-kslgIbVshJolG2KXV_omgT_vcUpmwJljvvYE8MkwUug-WGEhZmWUdU2ErK/exec';
+
+function trackCore(from, href) {
+  // 로컬·프리뷰에서 눌러본 것이 실서비스 기록에 섞이면 그때부터 숫자를 못 믿는다.
+  if (!/(^|\.)acttub\.com$/.test(location.hostname)) return;
+  try {
+    const q = href.indexOf('?');
+    const body = JSON.stringify({
+      type: 'click',
+      at: new Date().toISOString(),
+      from,
+      src: q < 0 ? '' : href.slice(q),
+      ref: location.origin,
+      click_id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    });
+    // 곧 페이지를 떠나므로 beacon을 쓴다. 평범한 fetch는 이동하는 순간 취소돼 절반쯤 사라진다.
+    // text/plain 이어야 preflight 없이 Apps Script가 받는다.
+    // beacon이 false를 내면 "큐에 못 넣었다"는 뜻이라 keepalive fetch로 한 번 더 시도한다.
+    const blob = new Blob([body], { type: 'text/plain;charset=UTF-8' });
+    if (!(navigator.sendBeacon && navigator.sendBeacon(CORE_TRACK, blob))) {
+      fetch(CORE_TRACK, { method: 'POST', mode: 'no-cors', keepalive: true, body }).catch(() => {});
+    }
+  } catch { /* 기록이 실패해도 사람은 도착해야 한다 */ }
+}
+
 /* ── 시작 ────────────────────────────────────────────────────── */
 applyCopy();
 renderPreview();
@@ -268,6 +298,7 @@ renderPreview();
 $('#btn-start').addEventListener('click', startRound);
 $('#btn-next').addEventListener('click', next);
 $('#btn-share').addEventListener('click', share);
+$('#btn-core').addEventListener('click', (e) => trackCore('stage', e.currentTarget.href));
 $('#btn-replay').addEventListener('click', () => {
   history.replaceState(null, '', '/');
   startRound();
