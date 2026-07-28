@@ -1,0 +1,12 @@
+# 배포 산출물이 아닌 것. 안 막으면 공개 URL로 그대로 열린다.
+.omc/
+design/
+src/
+build-fonts.py
+serve.py
+package.json
+package-lock.json
+node_modules/
+AGENTS.md
+CLAUDE.md
+README.md

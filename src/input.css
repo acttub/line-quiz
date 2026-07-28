@@ -1,0 +1,94 @@
+/* source(none)으로 자동 탐지를 끄고 실제 마크업만 스캔한다. 이게 없으면 Tailwind가 저장소 전체를
+   훑어 AGENTS.md·README의 클래스처럼 보이는 문자열까지 CSS로 만들어낸다.
+   app.js는 클래스 문자열을 만들어 넣으므로 같이 스캔한다. */
+@import "tailwindcss" source(none);
+@source "../index.html";
+@source "../app.js";
+
+/* 내부 디자인 정본에서 생성돼 들어온 파일이다. 직접 고치지 않는다 —
+   값을 바꾸려면 정본을 고치고 동기화 스크립트로 다시 받아온다. */
+@import "./brand/tailwind-starter.css";
+@import "./brand/responsive-base.css";
+
+/* ── Pretendard ───────────────────────────────────────────────────────
+   index.html·copy.js·data.js에 실제로 쓰인 글자만 서브셋한다.
+   문구나 대사를 고치면 build-fonts.py를 다시 돌린다 — 안 돌리면 새 글자가 시스템 폰트로 렌더된다.
+   이 브랜드의 가장 얇은 굵기는 500이다(Regular 파일이 없다). */
+@font-face {
+  font-family: Pretendard; font-style: normal; font-weight: 500;
+  font-display: swap; src: url(/fonts/pretendard-500.woff2) format("woff2");
+}
+@font-face {
+  font-family: Pretendard; font-style: normal; font-weight: 600;
+  font-display: swap; src: url(/fonts/pretendard-600.woff2) format("woff2");
+}
+@font-face {
+  font-family: Pretendard; font-style: normal; font-weight: 700;
+  font-display: swap; src: url(/fonts/pretendard-700.woff2) format("woff2");
+}
+
+/* ── 공통 표면 ────────────────────────────────────────────────────────
+   그릇(면·모서리·그림자)과 눌림·포커스만 묶는다. 레이아웃은 마크업에서 유틸리티로 준다.
+
+   @layer components가 아니라 @utility로 두는 이유: Tailwind v4는 components 레이어의
+   클래스를 @apply로 다시 쓸 수 없다("Cannot apply unknown utility class"). .btn·.choice가
+   tappable을 재사용해야 하므로 유틸리티여야 한다. */
+@utility card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+@utility tappable {
+  /* 곡선은 CSS 키워드 ease-out이다. Tailwind의 ease-out 유틸리티는 곡선이 다르다. */
+  transition-property: background-color, transform, box-shadow;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { transform: scale(0.98); }
+  &:focus-visible { outline: 1.5px solid var(--color-primary); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+@layer components {
+  .btn {
+    @apply tappable block w-full rounded-md border-0 py-[14px] px-md text-subtitle font-sans cursor-pointer text-center;
+  }
+  .btn-primary { @apply bg-primary-strong text-white; }
+  .btn-primary:hover { @apply bg-primary-deep; }
+
+  /* 코어로 잇는 버튼 자리. 채워진 파랑 두 개를 나란히 두면 위계가 사라져
+     어느 것도 주된 행동으로 읽히지 않는다 — 그래서 테두리 한 겹으로 격을 나눈다. */
+  .btn-outline { @apply bg-surface text-primary-strong no-underline; box-shadow: inset 0 0 0 1.5px var(--color-primary); }
+  .btn-outline:hover { @apply bg-primary-soft; }
+
+  .btn-secondary { @apply bg-primary-soft text-primary-strong; }
+  .btn-secondary:hover { @apply bg-primary-soft-hover; }
+
+  /* 보기 버튼. 답을 고르기 전에는 전부 같은 무게로 보여야 한다 —
+     한 칸이라도 다르게 생기면 그게 힌트가 된다. */
+  .choice {
+    @apply tappable card w-full cursor-pointer border-0 px-lg py-md text-left text-body-lg font-sans text-ink;
+    min-height: 52px;
+  }
+  .choice:hover:not(:disabled) { @apply bg-primary-soft; }
+
+  /* 답을 고른 뒤. 정답은 늘 초록으로 드러내고, 틀리게 고른 것만 따로 표시한다.
+     나머지는 흐리게 물려서 시선이 두 칸에만 남게 한다. */
+  .choice:disabled { cursor: default; }
+  .choice-correct { box-shadow: inset 0 0 0 2px var(--color-success); @apply bg-surface font-bold text-success; }
+  .choice-wrong { box-shadow: inset 0 0 0 2px var(--color-line); @apply bg-surface text-ink-tertiary line-through; }
+  .choice-muted { @apply bg-surface-sub text-ink-tertiary opacity-70; box-shadow: none; }
+}
+
+/* ── 진입 모션 ────────────────────────────────────────────────────────
+   80~240ms, 곧은 곡선. 탄성·바운스·시차 등장(stagger) 없이 한 번에 들어온다. */
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise .22s cubic-bezier(.2, .8, .2, 1) backwards; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "line-quiz",
+  "version": "0.0.0",
+  "private": true,
+  "description": "stage.acttub.com — 이 대사, 어느 무대? 스타일만 Tailwind CLI로 굽고, 배포는 정적이다.",
+  "scripts": {
+    "css": "tailwindcss -i src/input.css -o styles.css --minify",
+    "css:watch": "tailwindcss -i src/input.css -o styles.css --watch",
+    "serve": "python3 serve.py"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
+    "tailwindcss": "^4.1.11"
+  }
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- viewport-fit=cover가 있어야 responsive-base.css의 safe-area 대응이 켜진다.
+     maximum-scale·user-scalable=no를 넣지 않는다 — 안드로이드 크롬은 그걸 지켜서 확대가 막힌다. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>이 대사, 어느 무대? — 명대사 하나로 작품 맞히기 | acttub</title>
+<meta name="description" content="고전 희곡의 대사 한 줄만 보고 어느 작품인지 맞혀보세요. 열 문제, 3분. 해설마다 그 대사를 연기할 때 먼저 답해야 할 질문이 붙습니다.">
+<link rel="canonical" href="https://stage.acttub.com/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://stage.acttub.com/">
+<meta property="og:title" content="이 대사, 어느 무대?">
+<meta property="og:description" content="대사 한 줄만 보고 작품을 맞혀보세요. 열 문제, 3분.">
+<meta property="og:site_name" content="acttub">
+<!-- og:image는 아직 없다. 큰 카드로 선언해두면 이미지 없는 빈 카드가 나가므로 작은 카드로 둔다. -->
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+
+<!-- 방문 계측. vercel.json이 catch-all 폴백을 쓰지 않는 이유가 이 경로다 —
+     폴백이 /_vercel/* 를 삼키면 이 스크립트가 404가 되고 계측이 조용히 죽는다. -->
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="bg-neutral text-ink font-sans antialiased">
+
+<!-- 문장은 전부 copy.js에서 주입한다. 이 파일에는 화면 골격만 둔다. -->
+<div class="tier-root">
+<main class="tier-shell pb-xl">
+
+  <!-- ── 시작 ───────────────────────────────────────────────── -->
+  <section id="screen-start" hidden>
+    <div class="rise mt-lg rounded-lg px-lg py-xl text-center text-white"
+         style="background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));">
+      <div class="text-body-md font-bold opacity-90" data-copy="start.brand"></div>
+      <h1 class="mt-md text-h1" data-copy="start.title"></h1>
+      <p class="mt-[12px] text-body-md opacity-[0.92]" data-copy-html="start.lead"></p>
+    </div>
+
+    <p class="mt-md text-center text-body-sm text-ink-tertiary break-keep" data-copy="start.note"></p>
+
+    <button id="btn-start" class="btn btn-primary mt-lg" data-copy="start.button"></button>
+  </section>
+
+  <!-- ── 문제 ───────────────────────────────────────────────── -->
+  <section id="screen-quiz" hidden>
+    <div class="mt-lg flex items-center gap-md">
+      <!-- 몇 번째 문제인지는 옆의 "1 / 10" 텍스트가 읽어준다. 막대는 같은 정보의 그림이라 숨긴다. -->
+      <div class="h-[6px] flex-1 overflow-hidden rounded-pill bg-line" aria-hidden="true">
+        <div id="progress-bar" class="h-full rounded-pill bg-primary transition-[width] duration-200 ease-out" style="width: 0%"></div>
+      </div>
+      <div id="progress-text" class="shrink-0 text-body-sm font-bold text-ink-tertiary tabular-nums"></div>
+    </div>
+
+    <!-- 대사. 이 화면의 주인공이라 가장 크게 둔다. -->
+    <div class="card mt-md px-lg py-xl">
+      <div class="text-label text-primary" data-copy="quiz.prompt"></div>
+      <!-- tabindex="-1"은 다음 문제로 넘어갈 때 포커스를 여기로 옮기기 위한 것이다.
+           안 하면 눌렀던 '다음 문제' 버튼이 숨겨지면서 포커스가 문서 맨 위로 떨어진다. -->
+      <blockquote id="quiz-line" class="mt-md text-h2 break-keep" tabindex="-1"></blockquote>
+    </div>
+
+    <div id="choices" class="mt-md grid gap-sm" role="group" aria-label="작품 고르기"></div>
+
+    <!-- 답을 고른 뒤에만 열린다. 화자·장면·질문이 여기서 함께 나온다.
+         aria-live로 묶어야 화면을 못 보는 사람도 정답 여부를 바로 듣는다 —
+         포커스만 '다음 문제' 버튼으로 옮기면 맞았는지 틀렸는지가 통째로 빠진다. -->
+    <div id="feedback" class="mt-md" hidden aria-live="polite" tabindex="-1">
+      <div id="verdict-card" class="card px-lg py-md">
+        <div id="verdict" class="text-subtitle font-bold"></div>
+        <div class="mt-sm text-body-md">
+          <span class="text-ink-tertiary" data-copy="quiz.answerLabel"></span>
+          <span id="answer-work" class="ml-xs font-bold"></span>
+          <span id="answer-meta" class="ml-xs text-ink-sub"></span>
+        </div>
+      </div>
+
+      <div class="card mt-sm px-lg py-md">
+        <div class="text-label text-ink-tertiary" data-copy="quiz.contextLabel"></div>
+        <p id="answer-context" class="mt-xs text-body-md text-ink-sub break-keep"></p>
+      </div>
+
+      <div class="card mt-sm border-l-4 border-primary px-lg py-md">
+        <div class="text-label text-primary" data-copy="quiz.askLabel"></div>
+        <p id="answer-ask" class="mt-xs text-body-lg break-keep"></p>
+      </div>
+
+      <button id="btn-next" class="btn btn-primary mt-md"></button>
+    </div>
+  </section>
+
+  <!-- ── 결과 ───────────────────────────────────────────────── -->
+  <section id="screen-result" hidden>
+    <div class="rise mt-lg rounded-lg px-lg py-xl text-center text-white"
+         style="background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));">
+      <div id="result-heading" class="text-body-md font-bold opacity-90"></div>
+      <!-- 결과로 넘어올 때 포커스를 여기로 옮긴다. 안 옮기면 마지막에 누른 버튼이 사라지면서
+           포커스가 문서 맨 위로 떨어지고, 화면을 못 보는 사람에게 결과가 안내되지 않는다. -->
+      <h1 id="result-label" class="mt-sm text-h1 break-keep" tabindex="-1"></h1>
+      <p id="result-line" class="mt-[12px] text-body-md opacity-[0.92] break-keep"></p>
+    </div>
+
+    <section class="card mt-md px-lg py-lg">
+      <h2 class="text-subtitle font-bold" data-copy="result.missedTitle"></h2>
+      <ul id="missed-list" class="mt-md grid gap-md"></ul>
+    </section>
+
+    <button id="btn-share" class="btn btn-secondary mt-md" data-copy="result.shareButton"></button>
+
+    <!-- 코어로 잇는 다리. 서브프로젝트가 코어가 아님을 여기서 밝힌다. -->
+    <section class="card mt-md px-lg py-lg">
+      <h2 class="text-subtitle font-bold break-keep" data-copy="result.bridgeTitle"></h2>
+      <p class="mt-sm text-body-md text-ink-sub break-keep" data-copy="result.bridgeBody"></p>
+      <a id="btn-core" class="btn btn-outline mt-md" href="https://acttub.com/?utm_source=stage&utm_medium=subproject&utm_campaign=line-quiz"
+         data-copy="result.bridgeButton"></a>
+    </section>
+
+    <button id="btn-replay" class="btn btn-secondary mt-sm" data-copy="start.replay"></button>
+  </section>
+
+  <footer class="mt-xl text-center text-body-sm text-ink-tertiary">
+    <div class="font-semibold" data-copy="foot.brand"></div>
+    <p class="mt-sm break-keep" data-copy="foot.source"></p>
+  </footer>
+
+</main>
+</div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
