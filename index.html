@@ -29,6 +29,28 @@
 <!-- 방문 계측. vercel.json이 catch-all 폴백을 쓰지 않는 이유가 이 경로다 —
      폴백이 /_vercel/* 를 삼키면 이 스크립트가 404가 되고 계측이 조용히 죽는다. -->
 <script defer src="/_vercel/insights/script.js"></script>
+
+<!-- GA4. 프로덕션 호스트에서만 로드한다 — 로컬·프리뷰가 섞이면 유입 수를 믿을 수 없게 된다.
+     시트 전송(app.js)이 쓰는 것과 같은 가드다. -->
+<script>
+(function(){
+  if(!/(^|\.)acttub\.com$/.test(location.hostname))return;
+  var ID='G-DRMEWBN9Y9';
+  var s=document.createElement('script');
+  s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+ID;
+  document.head.appendChild(s);
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){window.dataLayer.push(arguments);};
+  window.gtag('js',new Date());
+  // 자동 page_view를 끄고 지금 주소로 직접 한 번 쏜다. acti가 쓰는 것과 같은 방식이다.
+  // 자동에 맡기면 gtag.js가 늦게 뜬 사이에 app.js가 주소를 바꿔버려(로드 직후 replaceState로
+  // '/'로 되돌리는 경로가 있다), 유입 UTM이 붙은 첫 주소가 아니라 바뀐 주소가 기록된다.
+  // page_location을 config가 아니라 이벤트에 실는 이유: config에 실으면 그 값이 이후 모든
+  // 이벤트의 기본값으로 눌러앉아 acttub_cta까지 랜딩 주소로 기록된다.
+  window.gtag('config',ID,{send_page_view:false});
+  window.gtag('event','page_view',{page_location:location.href});
+})();
+</script>
 </head>
 <body class="bg-neutral text-ink font-sans antialiased">
 
