@@ -16,6 +16,33 @@ const screens = {
   result: $('#screen-result'),
 };
 
+/* 첫 유입의 UTM은 주소가 /quiz와 /result/*로 바뀌기 전에 세션에 고정한다.
+   같은 탭에서 퀴즈를 다시 풀어도 최초 유입 채널이 중간 경로로 덮이지 않아야 한다. */
+const INBOUND_UTM_KEY = 'lineQuizInboundUtm';
+
+function readInboundUtm() {
+  const current = {};
+  new URLSearchParams(location.search).forEach((value, key) => {
+    if (key.startsWith('utm_')) current[key] = value;
+  });
+
+  try {
+    const saved = sessionStorage.getItem(INBOUND_UTM_KEY);
+    if (saved !== null) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    }
+    sessionStorage.setItem(INBOUND_UTM_KEY, JSON.stringify(current));
+  } catch { /* 저장소가 막혀도 현재 주소의 UTM으로 계속 진행한다 */ }
+
+  return current;
+}
+
+const inboundUtm = readInboundUtm();
+const upstream = (
+  typeof inboundUtm.utm_source === 'string' && inboundUtm.utm_source.trim()
+) || 'direct';
+
 /* ── 문구 주입 ────────────────────────────────────────────────
    data-copy="a.b" 자리에 copy.js의 문장을 텍스트로 넣는다.
    태그를 살려 넣는 경로(innerHTML)는 두지 않는다 — 줄바꿈은 마크업에서 처리하고,
@@ -99,6 +126,7 @@ function startRound() {
   round = buildRound();
   index = 0;
   answers = [];
+  history.pushState({ screen: 'quiz' }, '', '/quiz');
   show('quiz');
   renderQuestion();
 }
@@ -225,7 +253,7 @@ function renderResult() {
     });
   }
 
-  history.replaceState(null, '', `/result/${s}`);
+  history.pushState({ screen: 'result' }, '', `/result/${s}`);
   show('result');
   $('#result-label').focus({ preventScroll: true });
 }
@@ -272,11 +300,13 @@ function trackCore(from, href) {
   // 로컬·프리뷰에서 눌러본 것이 실서비스 기록에 섞이면 그때부터 숫자를 못 믿는다.
   if (!/(^|\.)acttub\.com$/.test(location.hostname)) return;
   try {
+    const upstream = new URL(href).searchParams.get('utm_term') || 'direct';
     const q = href.indexOf('?');
     const body = JSON.stringify({
       type: 'click',
       at: new Date().toISOString(),
       from,
+      upstream,
       src: q < 0 ? '' : href.slice(q),
       ref: location.origin,
       click_id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -295,10 +325,15 @@ function trackCore(from, href) {
 applyCopy();
 renderPreview();
 
+const coreButton = $('#btn-core');
+const coreUrl = new URL(coreButton.href);
+coreUrl.searchParams.set('utm_term', upstream);
+coreButton.href = coreUrl.href;
+
 $('#btn-start').addEventListener('click', startRound);
 $('#btn-next').addEventListener('click', next);
 $('#btn-share').addEventListener('click', share);
-$('#btn-core').addEventListener('click', (e) => trackCore('stage', e.currentTarget.href));
+coreButton.addEventListener('click', (e) => trackCore('stage', e.currentTarget.href));
 $('#btn-replay').addEventListener('click', () => {
   history.replaceState(null, '', '/');
   startRound();
@@ -306,5 +341,15 @@ $('#btn-replay').addEventListener('click', () => {
 
 // /result/7 같은 주소로 들어와도 남의 결과를 보여주지 않는다 — 본인이 풀어야 결과가 나온다.
 if (location.pathname.startsWith('/result')) history.replaceState(null, '', '/');
+
+window.addEventListener('popstate', (event) => {
+  if (event.state?.screen === 'result' && round.length > 0 && answers.length === round.length) {
+    show('result');
+  } else if (event.state?.screen === 'quiz' && round.length > 0) {
+    show('quiz');
+  } else {
+    show('start');
+  }
+});
 
 show('start');

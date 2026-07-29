@@ -21,6 +21,7 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8643
 
 # vercel.json의 rewrites와 같은 목록
 ROUTES = [
+    re.compile(r"^/quiz/?$"),
     re.compile(r"^/r16/?$"),
     re.compile(r"^/r8/?$"),
     re.compile(r"^/r4/?$"),

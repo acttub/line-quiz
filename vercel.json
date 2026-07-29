@@ -6,6 +6,7 @@
   "buildCommand": "",
   "installCommand": "",
   "rewrites": [
+    { "source": "/quiz", "destination": "/" },
     { "source": "/result/:score", "destination": "/" }
   ]
 }

@@ -10,15 +10,6 @@
 @import "./brand/tailwind-starter.css";
 @import "./brand/responsive-base.css";
 
-/* ⚠️ 정본(DESIGN.md)에는 카드 그림자가 "0 2px 8px rgba(0,0,0,0.08)"로 정해져 있는데
-   생성기가 그 값을 tailwind-starter.css에 실어주지 않는다. 그래서 .card의
-   box-shadow: var(--shadow-card)가 값 없이 무효가 된다 — 그림자가 조용히 사라진다.
-   pick·link-hub도 같은 이유로 이 줄을 손으로 넣어 두었다. 지어낸 값이 아니라 정본의 값이다.
-   생성기가 고쳐지면 이 블록을 지운다. */
-@theme {
-  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.08);
-}
-
 /* ── Pretendard ───────────────────────────────────────────────────────
    index.html·copy.js·data.js에 실제로 쓰인 글자만 서브셋한다.
    문구나 대사를 고치면 build-fonts.py를 다시 돌린다 — 안 돌리면 새 글자가 시스템 폰트로 렌더된다.
