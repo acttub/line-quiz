@@ -123,6 +123,7 @@ let index = 0;
 let answers = []; // { question, picked, correct }
 
 function startRound() {
+  trackEvent('quiz_start');
   round = buildRound();
   index = 0;
   answers = [];
@@ -201,6 +202,7 @@ function answer(picked) {
   // 해설이 길 때 포커스 링이 화면 밖에 생겨 어디에 있는지 알 수 없다.
   feedback.focus({ preventScroll: true });
   feedback.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'nearest' });
+  if (last) trackEvent('quiz_complete');
 }
 
 function next() {
@@ -256,11 +258,16 @@ function renderResult() {
   history.pushState({ screen: 'result' }, '', `/result/${s}`);
   show('result');
   $('#result-label').focus({ preventScroll: true });
+  // popstate 복원은 renderResult()를 다시 부르지 않고 기존 화면만 여므로,
+  // 새로 완주해 결과를 만든 경우에만 퍼널 분모를 남긴다.
+  trackEvent('result_view');
+  trackEvent(`result_${band.min}`);
 }
 
 let shareResetTimer;
 
 async function share() {
+  trackEvent('share_click');
   const s = score();
   const text = COPY.result.shareText(s, round.length, bandFor(s).label);
   const url = `${location.origin}/`;
@@ -295,6 +302,22 @@ async function share() {
    쓰는 것과 같은 곳이라 채널이 한 표에 모인다.
    리다이렉트를 끼우지 않는 이유: 중간에 페이지를 한 장 태우면 그만큼 사람이 샌다. */
 const CORE_TRACK = 'https://script.google.com/macros/s/AKfycbxmvQWyu-kslgIbVshJolG2KXV_omgT_vcUpmwJljvvYE8MkwUug-WGEhZmWUdU2ErK/exec';
+
+function sendToSheet(payload) {
+  if (!/(^|\.)acttub\.com$/.test(location.hostname)) return;
+  try {
+    const body = JSON.stringify(payload);
+    const blob = new Blob([body], { type: 'text/plain;charset=UTF-8' });
+    if (!(navigator.sendBeacon && navigator.sendBeacon(CORE_TRACK, blob))) {
+      fetch(CORE_TRACK, { method: 'POST', mode: 'no-cors', keepalive: true, body }).catch(() => {});
+    }
+  } catch { /* 기록이 실패해도 사람의 흐름은 계속되어야 한다 */ }
+}
+
+function trackEvent(name) {
+  if (!/(^|\.)acttub\.com$/.test(location.hostname)) return;
+  sendToSheet({ type: 'event', app: 'line-quiz', name, at: new Date().toISOString() });
+}
 
 function trackCore(from, href) {
   // 로컬·프리뷰에서 눌러본 것이 실서비스 기록에 섞이면 그때부터 숫자를 못 믿는다.
@@ -340,9 +363,11 @@ $('#btn-next').addEventListener('click', next);
 $('#btn-share').addEventListener('click', share);
 coreButton.addEventListener('click', (e) => trackCore('stage', e.currentTarget.href));
 $('#btn-replay').addEventListener('click', () => {
+  trackEvent('replay');
   history.replaceState(null, '', '/');
   startRound();
 });
+coreButton.addEventListener('click', () => trackEvent('cta_click'));
 
 // /result/7 같은 주소로 들어와도 남의 결과를 보여주지 않는다 — 본인이 풀어야 결과가 나온다.
 if (location.pathname.startsWith('/result')) history.replaceState(null, '', '/');
@@ -357,4 +382,5 @@ window.addEventListener('popstate', (event) => {
   }
 });
 
+trackEvent('landing_view');
 show('start');
