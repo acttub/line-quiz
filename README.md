@@ -81,8 +81,11 @@ uv run --with "fonttools[woff]" python build-fonts.py
 
 `git push origin main`이 곧 Vercel 배포다. 푸시는 소유자 승인 후에 한다.
 
+⚠️ **로컬에서 `/_vercel/insights/script.js` 404는 정상이다.** Vercel 런타임이 없어서 나는 것이고,
+실서비스에서는 200이다(2026-08-01 확인). 로컬 콘솔에 이 404 하나만 뜬다면 문제가 아니다.
+
 ## 아직 안 된 것
 
-- **Vercel Web Analytics를 켜지 않았다** — 대시보드 토글이라 CLI·API로는 안 된다.
-  안 켜면 `/_vercel/insights/script.js`가 404라 방문 계측이 죽고, 배포본 기기 매트릭스가 전부 실패로 뜬다.
 - 인스타 유입 캠페인
+- **easy 문항이 40문제 판을 못 받친다** — 고유 작품이 9개뿐이라 40문제 판이 어려운 쪽으로 기운다.
+  자세한 건 `AGENTS.md`의 문항 추가 절.
