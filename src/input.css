@@ -112,6 +112,18 @@
   .btn-quiet { @apply bg-surface-sub text-ink-sub; }
   .btn-quiet:hover { @apply bg-line; }
 
+  /* 시작 화면의 판 길이 선택. 라디오 동작은 app.js가 맡고, 선택 상태는 aria-checked와
+     같은 속성으로 그려서 보이는 상태와 보조기기 상태가 갈라지지 않게 한다. */
+  .round-size {
+    @apply tappable card grid cursor-pointer gap-xs border-0 px-sm py-md text-center font-sans text-ink;
+  }
+  .round-size:hover { @apply bg-primary-soft; }
+  .round-size[aria-checked="true"] {
+    @apply bg-primary-soft text-primary-strong;
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+  }
+  .round-size[aria-checked="true"] .round-size-time { @apply text-primary-strong; }
+
   /* 보기 버튼. 답을 고르기 전에는 전부 같은 무게로 보여야 한다 —
      한 칸이라도 다르게 생기면 그게 힌트가 된다.
      번호 원을 왼쪽에 두는 건 장식이 아니라, 네 칸이 같은 리듬으로 읽히게 하는 기준선이다. */

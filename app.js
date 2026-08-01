@@ -2,7 +2,7 @@
    (예외는 작품명·작가명처럼 data.js의 고유명사뿐이다.) */
 
 import { COPY, bandFor } from './copy.js';
-import { buildRound } from './data.js';
+import { ROUND_SIZE, buildRound } from './data.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -55,6 +55,10 @@ function applyCopy(root = document) {
   root.querySelectorAll('[data-copy]').forEach((el) => {
     const value = get(el.dataset.copy);
     if (typeof value === 'string') el.textContent = value;
+  });
+  root.querySelectorAll('[data-copy-aria-label]').forEach((el) => {
+    const value = get(el.dataset.copyAriaLabel);
+    if (typeof value === 'string') el.setAttribute('aria-label', value);
   });
 }
 
@@ -121,10 +125,12 @@ function renderPreview() {
 let round = [];
 let index = 0;
 let answers = []; // { question, picked, correct }
+let selectedRoundSize = ROUND_SIZE;
 
 function startRound() {
   trackEvent('quiz_start');
-  round = buildRound();
+  trackEvent(`size_${selectedRoundSize}_start`);
+  round = buildRound(selectedRoundSize);
   index = 0;
   answers = [];
   history.pushState({ screen: 'quiz' }, '', '/quiz');
@@ -202,7 +208,10 @@ function answer(picked) {
   // 해설이 길 때 포커스 링이 화면 밖에 생겨 어디에 있는지 알 수 없다.
   feedback.focus({ preventScroll: true });
   feedback.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'nearest' });
-  if (last) trackEvent('quiz_complete');
+  if (last) {
+    trackEvent('quiz_complete');
+    trackEvent(`size_${round.length}_complete`);
+  }
 }
 
 function next() {
@@ -221,7 +230,7 @@ function score() {
 
 function renderResult() {
   const s = score();
-  const band = bandFor(s);
+  const band = bandFor(s, round.length);
 
   $('#result-total').textContent = COPY.result.total(round.length);
   $('#result-score').textContent = String(s);
@@ -261,7 +270,7 @@ function renderResult() {
   // popstate 복원은 renderResult()를 다시 부르지 않고 기존 화면만 여므로,
   // 새로 완주해 결과를 만든 경우에만 퍼널 분모를 남긴다.
   trackEvent('result_view');
-  trackEvent(`result_${band.min}`);
+  trackEvent(band.event);
 }
 
 let shareResetTimer;
@@ -269,7 +278,7 @@ let shareResetTimer;
 async function share() {
   trackEvent('share_click');
   const s = score();
-  const text = COPY.result.shareText(s, round.length, bandFor(s).label);
+  const text = COPY.result.shareText(s, round.length, bandFor(s, round.length).label);
   const url = `${location.origin}/`;
 
   if (navigator.share) {
@@ -352,6 +361,39 @@ function trackCore(from, href) {
 /* ── 시작 ────────────────────────────────────────────────────── */
 applyCopy();
 renderPreview();
+
+const roundSizeButtons = [...document.querySelectorAll('[data-round-size]')];
+
+function selectRoundSize(size, moveFocus = false) {
+  selectedRoundSize = size;
+  roundSizeButtons.forEach((button) => {
+    const selected = Number(button.dataset.roundSize) === size;
+    button.setAttribute('aria-checked', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+    if (selected && moveFocus) button.focus();
+  });
+}
+
+roundSizeButtons.forEach((button) => {
+  button.addEventListener('click', () => selectRoundSize(Number(button.dataset.roundSize)));
+});
+
+$('#round-size-group').addEventListener('keydown', (event) => {
+  const current = roundSizeButtons.indexOf(event.target);
+  if (current < 0) return;
+
+  let next = current;
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (current - 1 + roundSizeButtons.length) % roundSizeButtons.length;
+  else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (current + 1) % roundSizeButtons.length;
+  else if (event.key === 'Home') next = 0;
+  else if (event.key === 'End') next = roundSizeButtons.length - 1;
+  else return;
+
+  event.preventDefault();
+  selectRoundSize(Number(roundSizeButtons[next].dataset.roundSize), true);
+});
+
+selectRoundSize(selectedRoundSize);
 
 const coreButton = $('#btn-core');
 const coreUrl = new URL(coreButton.href);

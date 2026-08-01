@@ -51,8 +51,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         sys.stderr.write("%s\n" % (fmt % args))
 
 
-class Server(socketserver.TCPServer):
+# 스레딩이어야 한다. 단일 스레드로 두면 브라우저가 HTML·CSS·JS·폰트를 동시에 물어올 때
+# 첫 요청이 끝날 때까지 나머지가 줄을 서서, 자동화 브라우저는 로딩이 끝나지 않는다.
+class Server(socketserver.ThreadingTCPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 
 # 127.0.0.1에만 묶는다. 빈 호스트("")로 두면 같은 와이파이의 아무나 이 저장소를 열 수 있다.

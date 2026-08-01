@@ -21,8 +21,16 @@ export const COPY = {
     previewLabel: '이 대사가 나오는 작품은?',
     previewLine: '“불어라, 바람아! 뺨이 찢어지도록 불어라!”',
     previewChoices: ['맥베스', '리어왕', '햄릿', '오이디푸스 왕'],
+    sizeLabel: '한 판 문제 수',
+    sizes: {
+      5: { count: '5문제', time: '약 1분 30초' },
+      10: { count: '10문제', time: '약 3분' },
+      20: { count: '20문제', time: '약 6분' },
+      40: { count: '40문제', time: '약 12분' },
+    },
     button: '첫 문제 열기',
-    note: '열 문제 · 3분 · 저작권이 끝난 고전 희곡에서',
+    // 저작권 얘기는 바로 아래 푸터가 이미 한다. 여기서는 다시 눌러볼 이유를 준다.
+    note: '문제는 판마다 새로 뽑혀요.',
     replay: '다시 한 판',
   },
 
@@ -51,10 +59,10 @@ export const COPY = {
     // 이름표는 극을 얼마나 봤는지에 대한 것이다. 사람이나 연기에 대한 말이 아니다.
     // 전부 긍정 서술이고, 낮은 구간에도 모자라다는 말을 쓰지 않는다.
     bands: [
-      { min: 9, label: '무대 옆에 사는 사람', line: '대본을 꽤 읽으셨네요. 이 정도 문제로는 부족했겠어요.' },
-      { min: 6, label: '객석 맨 앞줄', line: '들어본 대사가 많았죠. 나머지는 아직 만나지 않았을 뿐이에요.' },
-      { min: 3, label: '이제 막 극장 문을 연', line: '아는 대사와 처음 보는 대사가 반씩 섞였네요. 딱 재밌어지는 구간이에요.' },
-      { min: 0, label: '오늘 처음 온 관객', line: '처음 보는 대사가 대부분이었을 거예요. 여기 있는 작품들은 다 오디션 단골이라, 이제부터가 남는 장사예요.' },
+      { min: 0.9, event: 'result_9', label: '무대 옆에 사는 사람', line: '대본을 꽤 읽으셨네요. 이 정도 문제로는 부족했겠어요.' },
+      { min: 0.6, event: 'result_6', label: '객석 맨 앞줄', line: '들어본 대사가 많았죠. 나머지는 아직 만나지 않았을 뿐이에요.' },
+      { min: 0.3, event: 'result_3', label: '이제 막 극장 문을 연', line: '아는 대사와 처음 보는 대사가 반씩 섞였네요. 딱 재밌어지는 구간이에요.' },
+      { min: 0, event: 'result_0', label: '오늘 처음 온 관객', line: '처음 보는 대사가 대부분이었을 거예요. 여기 있는 작품들은 다 오디션 단골이라, 이제부터가 남는 장사예요.' },
     ],
     missedTitle: '오늘 처음 만난 대사',
     missedEmpty: '놓친 문제 없이 다 맞혔어요.',
@@ -75,7 +83,8 @@ export const COPY = {
   },
 };
 
-/** 맞힌 개수에 맞는 이름표를 고른다. 항상 하나로 확정된다 — "판정 불가"는 없다. */
-export function bandFor(score) {
-  return COPY.result.bands.find((b) => score >= b.min) ?? COPY.result.bands[COPY.result.bands.length - 1];
+/** 맞힌 비율에 맞는 이름표를 고른다. 경계의 일부라도 맞혀야 다음 구간에 들어간다. */
+export function bandFor(score, total) {
+  return COPY.result.bands.find((b) => score >= Math.ceil(total * b.min))
+    ?? COPY.result.bands[COPY.result.bands.length - 1];
 }
