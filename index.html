@@ -175,17 +175,23 @@
       <ul id="missed-list" class="mt-md grid gap-md"></ul>
     </section>
 
-    <button id="btn-share" class="btn btn-secondary mt-[12px]" data-copy="result.shareButton"></button>
-
-    <!-- 코어로 잇는 다리. 서브프로젝트가 코어가 아님을 여기서 밝힌다. -->
+    <!-- 코어로 잇는 다리. 서브프로젝트가 코어가 아님을 여기서 밝힌다.
+         버튼은 이 카드가 아니라 아래 sticky에 있다 — 한 판이 40문제면 위의 놓친 대사 목록만으로
+         이 카드가 접힘선 아래로 밀려서, 카드 안에 두면 결과를 다 본 사람도 버튼을 못 본다. -->
     <section class="card mt-[12px] px-lg py-lg">
       <h2 class="text-subtitle font-bold break-keep" data-copy="result.bridgeTitle"></h2>
       <p class="mt-sm text-body-md text-ink-sub break-keep" data-copy="result.bridgeBody"></p>
-      <a id="btn-core" class="btn btn-outline mt-md" href="https://acttub.com/?utm_source=stage&utm_medium=subproject&utm_campaign=line-quiz"
-         data-copy="result.bridgeButton"></a>
     </section>
 
+    <button id="btn-share" class="btn btn-secondary mt-[12px]" data-copy="result.shareButton"></button>
     <button id="btn-replay" class="btn btn-quiet mt-[12px]" data-copy="start.replay"></button>
+
+    <!-- 결과를 보는 내내 화면 하단에 떠 있다가 제자리에 닿으면 멈춘다. -->
+    <div class="tier-sticky-bottom mt-lg">
+      <a id="btn-core" class="btn btn-primary" href="https://acttub.com/?utm_source=stage&utm_medium=subproject&utm_campaign=line-quiz"
+         data-copy="result.bridgeButton"></a>
+      <p class="mt-xs text-center text-body-sm text-ink-tertiary" data-copy="result.bridgeNote"></p>
+    </div>
   </section>
 
   <footer class="mt-xl text-center text-body-sm text-ink-tertiary">
