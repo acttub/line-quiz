@@ -43,6 +43,15 @@ const upstream = (
   typeof inboundUtm.utm_source === 'string' && inboundUtm.utm_source.trim()
 ) || 'direct';
 
+/* 어느 광고 소재가 가입을 만들었는지는 utm_source 로는 못 가린다 — 그건 채널
+   이름(instagram)일 뿐이고 소재는 medium·campaign·content 에 있다. 코어 링크의
+   기존 utm_* 슬롯은 이미 다 차 있고 건드리면 지금 쌓이는 통계가 끊기므로,
+   아무도 쓰지 않는 utm_id 한 칸에 그 셋을 이어 붙인다. 없으면 빈 문자열이다. */
+const adId = ['utm_medium', 'utm_campaign', 'utm_content']
+  .map((key) => (typeof inboundUtm[key] === 'string' ? inboundUtm[key].trim() : ''))
+  .filter(Boolean)
+  .join('-');
+
 /* ── 문구 주입 ────────────────────────────────────────────────
    data-copy="a.b" 자리에 copy.js의 문장을 텍스트로 넣는다.
    태그를 살려 넣는 경로(innerHTML)는 두지 않는다 — 줄바꿈은 마크업에서 처리하고,
@@ -398,6 +407,7 @@ selectRoundSize(selectedRoundSize);
 const coreButton = $('#btn-core');
 const coreUrl = new URL(coreButton.href);
 coreUrl.searchParams.set('utm_term', upstream);
+if (adId) coreUrl.searchParams.set('utm_id', adId);
 coreButton.href = coreUrl.href;
 
 $('#btn-start').addEventListener('click', startRound);
